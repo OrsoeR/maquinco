@@ -269,166 +269,180 @@ body { font-family: Arial, sans-serif; margin: 0; background: white; color: var(
 .btn-cancelar:hover { background: #e5e5e5; }
 
 /* ==================================================================
-   📱 SECCIÓN DISPOSITIVOS MÓVILES (OPTIMIZADO PARA PANTALLAS CHICAS)
+   📱 SECCIÓN DISPOSITIVOS MÓVILES (REPARACIÓN DE DESBORDE TOTAL)
    ================================================================== */
 @media screen and (max-width: 820px) {
-    /* Ajustes generales de cabecera */
+    /* Forzar a que todo use un cálculo de ancho real estricto */
+    *, *:before, *:after {
+        box-sizing: border-box !important;
+    }
+
+    body, html {
+        max-width: 100% !important;
+        overflow-x: hidden !important; /* Elimina definitivamente el scroll de lado */
+    }
+
+    /* Contenedor de la cabecera adaptable */
     .container-header {
-        flex-direction: column;
-        gap: 12px;
-        padding: 10px 15px;
-        width: 100%;
-        box-sizing: border-box;
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .main-header {
-        padding: 10px 0;
-        width: 100%;
-        overflow: hidden;
+        padding: 5px 0 !important;
+        width: 100% !important;
     }
 
     .top-bar {
-        text-align: center;
-        width: 100%;
+        width: 100% !important;
+        font-size: 11px !important;
     }
     
     .top-bar .container-header {
-        flex-direction: row;
-        justify-content: center;
-        gap: 15px;
+        flex-direction: row !important;
+        justify-content: space-between !important;
     }
 
     .top-links {
-        display: none; /* Oculta links secundarios para ahorrar espacio en móvil */
+        display: none !important;
     }
 
     .logo {
-        text-align: center;
-        min-width: 100%;
-        font-size: 24px;
-        padding: 5px 0;
+        text-align: center !important;
+        width: 100% !important;
+        min-width: 0 !important; /* Elimina los 200px fijos */
+        font-size: 24px !important;
     }
 
-    /* Buscador adaptado a bloque completo */
+    /* Buscador en una sola fila sin salirse */
     .search-box {
-        width: 100%;
-        flex: none;
-        box-sizing: border-box;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
     }
     
-    .search-box select {
-        padding: 0 5px;
-        font-size: 12px;
-        max-width: 110px; /* Evita que el selector de categorías desplace el input */
+    .search-box input {
+        padding: 8px !important;
+        font-size: 14px !important;
+        width: 40% !important;
     }
 
-    /* Solución al desborde de Inicia Sesión y Carrito */
+    .search-box select {
+        padding: 0 4px !important;
+        font-size: 11px !important;
+        max-width: 120px !important; /* Evita que el selector empuje los bordes */
+    }
+
+    .search-box button {
+        padding: 0 15px !important;
+    }
+
+    /* 🔥 CORRECCIÓN CRÍTICA: Bloque Inicia Sesión y Carrito */
     .header-actions {
-        min-width: 100%;
-        width: 100%;
-        justify-content: space-around; /* Distribución simétrica en móvil */
-        gap: 10px;
-        border-top: 1px dashed var(--border);
-        padding-top: 12px;
-        box-sizing: border-box;
+        width: 100% !important;
+        min-width: 0 !important; /* Elimina los 300px fijos de PC */
+        justify-content: space-evenly !important;
+        gap: 5px !important;
+        border-top: 1px dashed var(--border) !important;
+        padding-top: 10px !important;
     }
 
     .action-item {
-        justify-content: center;
-        flex: 1;
-        white-space: nowrap;
+        gap: 6px !important;
+        font-size: 13px !important;
     }
 
     .action-item strong, 
     .action-item span {
-        max-width: 90px; /* Previene textos que rompan la línea */
-        font-size: 13px;
+        max-width: 110px !important; /* Encoge los textos para que entren holgados */
     }
 
-    /* Menú de navegación táctil con scroll fluido horizontal */
+    /* 🧭 Menú de navegación con barra deslizante horizontal */
     .nav-menu {
-        width: 100%;
+        width: 100% !important;
     }
+
     .nav-menu ul {
-        justify-content: flex-start;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        padding: 0 10px;
-        gap: 5px;
+        justify-content: flex-start !important;
+        overflow-x: auto !important; /* Permite deslizar de lado si no cabe completo */
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 5px 10px !important;
     }
 
     .nav-menu a {
-        padding: 12px 12px;
-        font-size: 13px; /* Tamaño optimizado para evitar colisiones */
+        padding: 10px 12px !important;
+        font-size: 13px !important;
     }
 
-    /* Contenido principal */
     .main-content {
-        padding: 20px 0;
+        padding: 20px 0 !important;
+        width: 100% !important;
     }
 
-    /* Cuadrícula adaptada a dos columnas estables en móvil */
+    .section-header {
+        margin-bottom: 20px !important;
+    }
+
+    /* 📦 Cuadrícula adaptada a dos columnas ordenadas */
     .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        padding: 0 12px;
-        width: 100%;
-        box-sizing: border-box;
+        grid-template-columns: repeat(2, 1fr) !important; /* Dos productos por fila */
+        gap: 10px !important;
+        padding: 0 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
-    /* Rediseño de tarjeta de producto flexible */
+    /* Tarjetas de productos proporcionadas */
     .card {
-        padding: 10px;
-        height: auto;
-        min-height: 310px;
-        border-radius: 8px;
-        box-sizing: border-box;
+        padding: 10px !important;
+        height: auto !important; /* El alto ya no se estira de manera fija */
+        min-height: 290px !important;
+        border-radius: 6px !important;
     }
 
     .card img {
-        height: 100px;
-        object-fit: contain;
+        height: 95px !important;
     }
 
     .card h3 {
-        font-size: 12px;
-        line-height: 1.3;
-        height: 32px;
-        margin: 6px 0;
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        height: 30px !important;
+        margin: 5px 0 !important;
     }
 
     .price {
-        font-size: 15px;
-        margin: 5px 0;
+        font-size: 15px !important;
+        margin: 4px 0 !important;
     }
 
     .card button {
-        padding: 8px 5px;
-        font-size: 12px;
-        border-radius: 4px;
-        text-transform: uppercase;
+        padding: 8px 4px !important;
+        font-size: 11px !important;
     }
 
-    /* Modales adaptativos */
+    /* Modales */
     .modal-content {
-        width: 85%;
-        padding: 25px 20px;
+        width: 88% !important;
+        padding: 20px !important;
     }
 
     .modal-custom {
-        width: 92%;
-        padding: 20px;
-        box-sizing: border-box;
+        width: 94% !important;
+        padding: 15px !important;
     }
 
-    /* Carrito lateral a pantalla completa en móvil */
+    /* Carrito lateral */
     .cart-sidebar {
-        width: 100%;
-        right: -100%;
+        width: 100% !important;
+        right: -100% !important;
     }
     
     .cart-sidebar.active {
-        right: 0;
+        right: 0 !important;
     }
 }
