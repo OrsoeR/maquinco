@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAQUINCO | Venta y Renta de Maquinaria</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .custom-toast {
+            position: fixed;
+            bottom: -100px;
+            right: 20px;
+            background: var(--dark, #1a1a1a);
+            color: #ffffff;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 99999;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+            border-left: 5px solid var(--primary, #fbc02d);
+            max-width: 350px;
+        }
+        .custom-toast.show {
+            bottom: 20px;
+            opacity: 1;
+        }
+        .custom-toast i {
+            color: var(--primary, #fbc02d);
+            font-size: 22px;
+        }
+        .custom-toast-content p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .custom-toast-content strong {
+            display: block;
+            color: var(--primary, #fbc02d);
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="container-header">
+            <div class="top-contact">
+                <span><i class="fas fa-phone"></i> Soporte: 961 231 5072</span>
+                <span onclick="abrirAdmin()" style="cursor:pointer; margin-left:15px; color:var(--primary); font-weight:bold;"><i class="fas fa-user-shield"></i> ACCESO ADMIN</span>
+            </div>
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="container-header">
+            <div class="logo" id="inicio">
+                <i class="fas fa-tools"></i> MAQUINCO
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" onkeyup="buscarProducto()" placeholder="Buscar productos...">
+                <select id="catSelect" onchange="buscarProducto()">
+                    <option value="all">Todas las categorías</option>
+                    <option value="Perforación">Perforación</option>
+                    <option value="Compactación">Compactación</option>
+                    <option value="Maquinaria Pesada">Maquinaria Pesada</option>
+                    <option value="Renta">Equipos en Renta</option>
+                </select>
+                <button onclick="buscarProducto()"><i class="fas fa-search"></i></button>
+            </div>
+
+            <div class="header-actions">
+                <div class="action-item" id="userAction" onclick="abrirLogin()">
+                    <i class="far fa-user"></i>
+                    <div class="action-text"><strong id="userNameStatus">Inicia Sesión</strong></div>
+                </div>
+                <div class="action-item cart" onclick="toggleCart()" style="cursor:pointer;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="badge" id="cart-count">0</span>
+                    <div class="action-text">
+                        <span>Carrito:</span>
+                        <strong id="cart-total">$0.00</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-menu">
+        <div class="container-header">
+            <ul>
+                <li><a href="#inicio" class="active">INICIO</a></li>
+                <li><a href="#nosotros">NOSOTROS</a></li>
+                <li><a href="#tienda">TIENDA</a></li>
+                <li><a href="#renta">RENTA</a></li>
+                <li><a href="#contacto">CONTACTO</a></li>
+                <a href="rastreo.html" style="font-weight: bold; color: #fbc02d;"><i class="fas fa-truck-moving"></i> RASTREAR PEDIDO</a>
+            </ul>
+        </div>
+    </nav>
+
+    <div id="adminPanel" style="display:none; background: #f9f9f9; border-bottom: 3px solid var(--primary); padding: 30px 0;">
+        <div class="container-header" style="flex-direction: column; align-items: flex-start;">
+            <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0; color:var(--dark);">Gestión de Inventario Cloud</h2>
+                <button onclick="cerrarAdmin()" style="background:var(--dark); color:var(--primary); border:none; padding:8px 20px; cursor:pointer; font-weight:bold; border-radius:4px;">CERRAR PANEL</button>
+            </div>
+            
+            <div id="statsAdminContainer" style="width:100%; margin-bottom:20px;"></div>
+            
+            <div style="background:white; padding:25px; border-radius:8px; border:1px solid var(--border); width:100%; box-sizing:border-box;">
+                <h3 id="formTitle">Registrar Nuevo Producto</h3>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                    <input type="text" id="newProdNombre" placeholder="Nombre" style="padding:12px; flex:2; border:1px solid var(--border); border-radius:4px;">
+                    <input type="number" id="newProdPrecio" placeholder="Precio ($)" style="padding:12px; flex:1; border:1px solid var(--border); border-radius:4px;">
+                    <input type="number" id="newProdStock" placeholder="Stock / Cantidad" style="padding:12px; flex:1; border:1px solid var(--border); border-radius:4px;">
+                    
+                    <select id="newProdCat" style="padding:12px; flex:1; border:1px solid var(--border); border-radius:4px; background:white;">
+                        <option value="" disabled selected>Categoría...</option>
+                        <option value="Perforación">Perforación</option>
+                        <option value="Compactación">Compactación</option>
+                        <option value="Maquinaria Pesada">Maquinaria Pesada</option>
+                        <option value="Renta">Renta</option>
+                    </select>
+                    <input type="text" id="newProdImg" placeholder="URL Imagen" style="padding:12px; flex:2; border:1px solid var(--border); border-radius:4px;">
+                    <button id="btnGuardar" onclick="agregarOActualizarProducto()" style="background:#28a745; color:white; border:none; padding:12px 30px; cursor:pointer; font-weight:bold; border-radius:4px; width:100%;">+ GUARDAR EN NUBE</button>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0; width: 100%;">
+            <h3 style="color: var(--dark); margin-bottom: 15px;"><i class="fas fa-boxes"></i> GESTIÓN DE PEDIDOS RECIBIDOS</h3>
+            <div id="admin-pedidos-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; width: 100%; box-sizing: border-box;">
+                </div>
+        </div>
+    </div>
+
+    <main class="main-content" id="tienda">
+        <div class="section-header">
+            <p class="subtitle">MAQUINCO EN LÍNEA</p>
+            <h2 id="tiendaTitle">PRODUCTOS EN VENTA</h2>
+        </div>
+        <div class="product-grid" id="product-container"></div>
+    </main>
+
+    <section id="renta" class="main-content" style="background: #fff;">
+        <div class="section-header">
+            <p class="subtitle">EQUIPO DISPONIBLE</p>
+            <h2>MAQUINARIA EN RENTA</h2>
+        </div>
+        <div class="product-grid" id="renta-container"></div>
+    </section>
+
+    <section id="nosotros" class="main-content" style="background-color: var(--gray-bg); border-top: 1px solid var(--border);">
+        <div class="container-header" style="flex-direction: column;">
+            <div class="section-header">
+                <p class="subtitle">MÁS DE 15 AÑOS DE EXPERIENCIA</p>
+                <h2>SOBRE MAQUINCO</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center; width: 100%;">
+                <div style="line-height: 1.8; color: #444; text-align: justify;">
+                    <p><strong>MAQUINCO</strong> se ha consolidado en Tuxtla Gutiérrez como el aliado estratégico de la industria de la construcción en Chiapas. Nos especializamos en la venta y renta de maquinaria de última generación, ofreciendo soluciones integrales para optimizar cada obra.</p>
+                </div>
+                <div style="background: var(--dark); color: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                    <h3 style="color: var(--primary); margin-top: 0;">Nuestra Misión</h3>
+                    <p style="font-style: italic;">"Impulsar el desarrollo regional mediante el suministro de maquinaria eficiente y excelencia en el servicio técnico."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contacto" class="main-content" style="background: white;">
+        <div class="container-header" style="flex-direction: column;">
+            <div class="section-header">
+                <p class="subtitle">ATENCIÓN PERSONALIZADA</p>
+                <h2>PONTE EN CONTACTO</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; width: 100%;">
+                <div style="background: #fdfdfd; padding: 30px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-map-marker-alt" style="color: var(--primary); font-size: 24px;"></i>
+                        <div>
+                            <strong>Dirección:</strong><br>
+                            <a href="https://maps.app.goo.gl/Fr4MUdTQXNBXXy359" target="_blank" style="color: #444; text-decoration: none; border-bottom: 1px dashed var(--primary); font-weight: bold;">
+                                Ver ubicación en Google Maps <i class="fas fa-external-link-alt" style="font-size: 11px; margin-left: 5px;"></i>
+                            </a>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Tuxtla Gutiérrez, Chiapas.</p>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-phone-alt" style="color: var(--primary); font-size: 24px;"></i>
+                        <div><strong>Teléfono:</strong><br>961 231 5072</div>
+                    </div>
+                </div>
+                <div style="background: white;">
+                    <form id="maquincoContactForm" style="display: flex; flex-direction: column; gap: 10px;">
+                        <input type="text" name="Nombre Completo" placeholder="Nombre completo" required style="padding: 12px; border: 1px solid var(--border); border-radius: 4px;">
+                        <input type="email" name="Correo Electrónico" placeholder="Correo electrónico" required style="padding: 12px; border: 1px solid var(--border); border-radius: 4px;">
+                        <textarea name="Mensaje" placeholder="¿Cómo podemos ayudarte?" rows="4" required style="padding: 12px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit;"></textarea>
+                        <button type="submit" id="btnEnviarContacto" style="background: var(--dark); color: var(--primary); border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px;">ENVIAR MENSAJE</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="loginModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarLogin()">×</span>
+            <div class="logo" style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-tools"></i> MAQUINCO
+            </div>
+            <div id="authInputs">
+                <input type="email" id="authEmail" placeholder="Correo electrónico" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+                <input type="password" id="authPass" placeholder="Contraseña" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+                <p id="authMsg" style="font-size:14px; text-align:center; margin-bottom:15px;"></p>
+                <button onclick="loginReal()" style="width:100%; background:var(--dark); color:var(--primary); border:none; padding:12px; cursor:pointer; font-weight:bold; border-radius:4px; margin-bottom:10px;">INGRESAR</button>
+                <button onclick="registroReal()" style="width:100%; background:white; color:var(--dark); border:1px solid var(--dark); padding:10px; cursor:pointer; font-weight:bold; border-radius:4px;">CREAR CUENTA</button>
+                <div style="text-align: center; margin: 15px 0; color: #888; font-size: 14px;">o continúa con</div>
+                <button onclick="loginConGoogle()" style="width:100%; background: white; color: #444; border: 1px solid #ddd; padding: 10px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18px"> Google
+                </button>
+            </div>
+            <button onclick="cerrarSesion()" id="btnCerrarSesion" style="display:none; width:100%; background:#ff4444; color:white; border:none; padding:12px; margin-top:20px; cursor:pointer; border-radius:4px;">CERRAR SESIÓN</button>
+        </div>
+    </div>
+
+    <div class="cart-overlay" onclick="toggleCart()"></div>
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3 style="margin:0; color:white;">Tu Pedido</h3>
+            <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:25px; cursor:pointer;">×</button>
+        </div>
+        <div id="cart-items-container" style="flex:1; overflow-y:auto; padding:20px;"></div>
+        <div class="cart-footer" style="padding:20px; border-top:2px solid var(--primary); background:#fff;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px;">
+                <strong>TOTAL:</strong>
+                <span id="sidebar-total" style="color:var(--dark); font-weight:bold;">$0.00</span>
+            </div>
+            <button onclick="finalizarCompra()" style="width:100%; padding:15px; background:var(--primary); color:var(--dark); border:none; font-weight:bold; cursor:pointer; border-radius:4px; font-size:16px;">ENVIAR PEDIDO</button>
+        </div>
+    </div>
+
+    <a href="https://wa.me/9612315072" class="ws-fixed" target="_blank"><i class="fab fa-whatsapp"></i></a>
+
+    <div id="checkoutModal" class="modal-custom">
+        <div class="modal-content-custom">
+            <h3><i class="fas fa-truck"></i> Detalles de Entrega</h3>
+            <p>Completa la información para procesar tu pedido de Maquinco.</p>
+            <div class="input-group">
+                <label>WhatsApp de contacto</label>
+                <input type="tel" id="checkout-tel" placeholder="Ej: 961 123 4567">
+            </div>
+            <div class="input-group">
+                <label>Dirección de entrega</label>
+                <textarea id="checkout-dir" placeholder="Calle, número, colonia..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>Método de Pago</label>
+                <select id="checkout-pago">
+                    <option value="Efectivo contra entrega">Efectivo contra entrega</option>
+                    <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button onclick="cerrarCheckout()" class="btn-cancelar">Cancelar</button>
+                <button onclick="confirmarPedidoFinal()" class="btn-confirmar">Confirmar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay-custom"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="cart-logic.js"></script>
+    <script src="script.js"></script>
+
+    <div id="quantityModal" class="modal-custom" style="display:none;">
+        <div class="modal-content-custom" style="max-width: 350px; text-align: center;">
+            <h3 id="qtyTitle" style="margin-bottom: 10px;">Seleccionar Cantidad</h3>
+            <p id="qtyStock" style="font-size: 14px; color: #666; margin-bottom: 20px;"></p>
+            
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px;">
+                <button onclick="changeQty(-1)" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 20px;">-</button>
+                <input type="number" id="inputQty" value="1" min="1" style="width: 60px; text-align: center; font-size: 18px; font-weight: bold; border: none; border-bottom: 2px solid var(--primary); outline: none;">
+                <button onclick="changeQty(1)" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 20px;">+</button>
+            </div>
+
+            <div class="modal-actions" style="display: flex; gap: 10px;">
+                <button onclick="cerrarQtyModal()" class="btn-cancelar" style="flex:1;">CANCELAR</button>
+                <button id="btnConfirmarQty" class="btn-confirmar" style="flex:1;">AGREGAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminAuthModal" class="modal-custom" style="display:none;">
+        <div class="modal-content-custom" style="max-width: 360px; text-align: center;">
+            <span class="close-modal" onclick="cerrarAuthAdminModal()" style="float:right; cursor:pointer; font-size:24px; line-height:20px;">×</span>
+            <h3 style="margin-bottom: 5px; margin-top:10px;"><i class="fas fa-user-shield"></i> PANEL CONTROL</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa la clave de autorización:</p>
+            
+            <div class="input-group" style="margin-bottom: 15px; text-align: left;">
+                <input type="password" id="adminPassInput" placeholder="Clave de acceso..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; font-size:15px;">
+            </div>
+            
+            <p id="adminAuthError" style="color:#ff4444; font-size:13px; margin: -5px 0 15px 0; display:none; font-weight:bold;">⚠️ Clave incorrecta. Intenta de nuevo.</p>
+
+            <div class="modal-actions" style="display: flex; gap: 10px;">
+                <button onclick="cerrarAuthAdminModal()" class="btn-cancelar" style="flex:1;">CANCELAR</button>
+                <button onclick="verificarClaveAdmin()" class="btn-confirmar" style="flex:1; background:var(--dark, #1a1a1a); color:var(--primary, #fbc02d); font-weight:bold;">INGRESAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastNotification" class="custom-toast">
+        <i class="fas fa-check-circle"></i>
+        <div class="custom-toast-content">
+            <strong>¡Excelente!</strong>
+            <p>Tu mensaje fue recibido, te contactamos en algun momento</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('maquincoContactForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+            
+            const botonEnvio = document.getElementById('btnEnviarContacto');
+            const textoOriginal = botonEnvio.innerText;
+            
+            botonEnvio.innerText = "ENVIANDO...";
+            botonEnvio.disabled = true;
+
+            const datosFormulario = new FormData(this);
+
+            fetch('https://formsubmit.co/ajax/maquincoservicio@gmail.com', {
+                method: 'POST',
+                body: datosFormulario,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                this.reset();
+                mostrarMensajeBonito();
+            })
+            .catch(error => {
+                console.error('Error en el envío:', error);
+                this.reset();
+                mostrarMensajeBonito();
+            })
+            .finally(() => {
+                botonEnvio.innerText = textoOriginal;
+                botonEnvio.disabled = false;
+            });
+        });
+
+        function mostrarMensajeBonito() {
+            const toast = document.getElementById('toastNotification');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+
+</body>
+</html>

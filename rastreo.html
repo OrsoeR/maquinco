@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zona de Clientes | MAQUINCO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary: #fbc02d;
+            --dark: #1a1a1a;
+            --gray: #f4f4f4;
+            --danger: #dc3545;
+            --success: #28a745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--gray);
+            margin: 0;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .btn-regresar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e0e0e0;
+            color: var(--dark);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn-regresar:hover { background: var(--dark); color: white; }
+
+        .header-rastreo {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header-rastreo h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+
+        /* --- PESTAÑAS (TABS) INTERFACES --- */
+        .tabs-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            color: #555;
+            transition: all 0.3s;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab-btn.active {
+            background: var(--dark);
+            color: white;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+        }
+        .search-box input:focus { border-color: var(--primary); }
+        .search-box button {
+            background: var(--dark);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-box button:hover { background: var(--primary); color: var(--dark); }
+
+        .seccion-panel { display: none; }
+        .seccion-panel.active { display: block; }
+
+        /* --- LÍNEA DE TIEMPO --- */
+        .timeline { position: relative; padding-left: 50px; list-style: none; margin-top: 30px; display: none; }
+        .timeline::before { content: ''; position: absolute; left: 24px; top: 5px; bottom: 5px; width: 4px; background: #ddd; }
+        .step { position: relative; margin-bottom: 35px; opacity: 0.4; transition: all 0.4s ease; }
+        .step-icon { position: absolute; left: -40px; top: 0; width: 32px; height: 32px; background: white; border: 3px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #999; z-index: 2; }
+        .step-content h3 { margin: 0 0 5px 0; font-size: 16px; }
+        .step-content p { margin: 0; font-size: 13px; color: #666; }
+        .step.active { opacity: 1; }
+        .step.active .step-icon { border-color: var(--success); background: var(--success); color: white; }
+        .step.current .step-icon { border-color: var(--primary); background: var(--primary); color: var(--dark); animation: pulso 1.5s infinite; }
+
+        @keyframes pulso {
+            0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); }
+        }
+
+        .info-pedido { background: #f9f9f9; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 4px solid var(--primary); display: none; }
+        .cancel-container { margin-top: 25px; text-align: center; display: none; }
+        .btn-cancelar { background: none; border: none; color: #0066cc; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn-cancelar:hover { color: var(--danger); text-decoration: underline; }
+
+        /* --- INTERFAZ INVENTARIO DE CLIENTES --- */
+        .producto-comprado-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .prod-info-meta { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #555; }
+        .btn-calificar {
+            align-self: flex-start;
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-calificar:hover { background: var(--dark); }
+
+        /* --- SISTEMA DE ESTRELLAS --- */
+        .rating-stars { display: flex; gap: 5px; margin: 5px 0; font-size: 20px; color: #ccc; cursor: pointer; }
+        .rating-stars .fa-star.selected { color: #ffca28; }
+
+        /* --- MODAL PARA MOTIVOS / CALIFICACIONES --- */
+        .modal-cancel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 420px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin-top: 0; font-size: 18px; }
+        .modal-content select, .modal-content textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; resize: none; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-buttons button { padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-close-modal { background: #e0e0e0; color: #333; }
+        .btn-confirm-cancel { background: var(--success); color: white; }
+
+        .success-cancel-card { text-align: center; padding: 20px 10px; }
+        .success-cancel-card i { font-size: 55px; margin-bottom: 15px; }
+        .success-cancel-card h2 { margin: 0 0 10px 0; font-size: 22px; }
+        .btn-back-store { display: inline-block; background: var(--dark); color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <a href="index.html" class="btn-regresar">
+            <i class="fas fa-arrow-left"></i> Volver a la Tienda
+        </a>
+
+        <div class="header-rastreo">
+            <h1>⚙️ PANEL DEL CLIENTE - MAQUINCO</h1>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="cambiarPestana('rastreo-tab', this)"><i class="fas fa-truck"></i> Rastreo Individual</button>
+            <button class="tab-btn" id="btnPestanaInventario" onclick="cambiarPestana('inventario-tab', this)"><i class="fas fa-boxes"></i> Mi Inventario / Calificar</button>
+        </div>
+
+        <div id="rastreo-tab" class="seccion-panel active">
+            <div id="trackingContent">
+                <div class="search-box">
+                    <input type="text" id="inputRastreo" placeholder="Introduce el ID de tu pedido...">
+                    <button onclick="buscarEstatus()"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+
+                <div class="info-pedido" id="infoPedido"></div>
+
+                <ul class="timeline" id="timelineVisual">
+                    <li class="step" id="step-pendiente">
+                        <div class="step-icon"><i class="fas fa-receipt"></i></div>
+                        <div class="step-content"><h3>Pedido Recibido</h3><p>Estamos validando los datos de tu orden y confirmando tu pago.</p></div>
+                    </li>
+                    <li class="step" id="step-preparacion">
+                        <div class="step-icon"><i class="fas fa-tools"></i></div>
+                        <div class="step-content"><h3>Preparando Maquinaria</h3><p>Nuestro taller está inspeccionando y cargando el equipo para su traslado.</p></div>
+                    </li>
+                    <li class="step" id="step-enviado">
+                        <div class="step-icon"><i class="fas fa-truck-moving"></i></div>
+                        <div class="step-content"><h3>En Camino / En Ruta</h3><p>¡Tu equipo va rumbo a la locación asignada!</p></div>
+                    </li>
+                    <li class="step" id="step-completado">
+                        <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="step-content"><h3>Entregado</h3><p>La maquinaria ha sido entregada y se encuentra lista para operar.</p></div>
+                    </li>
+                </ul>
+
+                <div class="cancel-container" id="cancelContainer">
+                    <button class="btn-cancelar" onclick="abrirModalCancelacion()"><i class="fas fa-times-circle"></i> Cancelar compra</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventario-tab" class="seccion-panel">
+            <p style="font-size:13px; color:#555; margin-top:0;">Historial de maquinaria adquirida con tu cuenta:</p>
+            
+            <div class="search-box" id="buscadorManualInventario">
+                <input type="tel" id="inputTelefonoCliente" placeholder="Ej: 529612315072">
+                <button onclick="cargarInventarioCliente()"><i class="fas fa-history"></i> Cargar Equipos</button>
+            </div>
+
+            <div id="inventario-productos-lista">
+                <p style="color:#888; font-style:italic; text-align:center; padding:10px;">Cargando tu historial de equipos automáticamente...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-cancel" id="modalCalificar">
+        <div class="modal-content">
+            <h3 id="calificarTituloProd">Calificar Maquinaria</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom:10px;">Tu reseña y opinión serán enviadas directamente al correo de control de calidad de MAQUINCO.</p>
+            
+            <label style="font-size:13px; font-weight:bold;">¿Cuántas estrellas le das?</label>
+            <div class="rating-stars" id="estrellasContenedor">
+                <i class="fas fa-star" onclick="marcarEstrellas(1)"></i>
+                <i class="fas fa-star" onclick="marcarEstrellas(2)"></i>
+                <i class="fas fa-star" onclick="marcarEstrellas(3)"></i>
+                <i class="fas fa-star" onclick="marcarEstrellas(4)"></i>
+                <i class="fas fa-star" onclick="marcarEstrellas(5)"></i>
+            </div>
+
+            <label style="font-size:13px; font-weight:bold;">Déjanos tus comentarios sobre el equipo:</label>
+            <textarea id="textoComentario" rows="4" placeholder="Cuéntanos tu experiencia con el equipo, rendimiento, flete..."></textarea>
+            
+            <div class="modal-buttons">
+                <button class="btn-close-modal" onclick="cerrarModalCalificar()">Cancelar</button>
+                <button class="btn-confirm-cancel" onclick="enviarCalificacionCorreo()">Enviar Reseña</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-cancel" id="modalCancelacion">
+        <div class="modal-content">
+            <h3>¿Por qué quieres cancelar tu compra?</h3>
+            <select id="selectMotivo">
+                <option value="Me equivoqué de producto/modelo">Me equivoqué de producto/modelo</option>
+                <option value="El envío tarda demasiado">El envío tarda demasiado</option>
+                <option value="Ya no necesito el equipo">Ya no necesito el equipo</option>
+                <option value="Otro motivo">Otro motivo</option>
+            </select>
+            <div class="modal-buttons">
+                <button class="btn-close-modal" onclick="cerrarModalCancelacion()">Conservar compra</button>
+                <button class="btn-confirm-cancel" style="background:var(--danger);" onclick="procesarCancelacionReal()">Confirmar Cancelación</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBanZAYwUBluom6wJ3ywQ5DT1144Ri_Z_w",
+            authDomain: "maquinco-tuxtla.firebaseapp.com",
+            projectId: "maquinco-tuxtla",
+            storageBucket: "maquinco-tuxtla.appspot.com",
+            messagingSenderId: "324439294195",
+            appId: "1:324439294195:web:9e150a9e3e8c170c3c3786"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let idPedidoActual = "";
+        let productosDelPedido = [];
+        let estrellasSeleccionadas = 0;
+        let productoACalificarInfo = null;
+        let telefonoClienteDetectado = "";
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idUrl = urlParams.get('id');
+            if(idUrl) {
+                document.getElementById('inputRastreo').value = idUrl;
+                buscarEstatus();
+            } else {
+                document.getElementById('inventario-productos-lista').innerHTML = `<p style="color:#888; text-align:center; padding:10px;">Ingresa tu teléfono arriba para ver tu inventario.</p>`;
+            }
+        }
+
+        function cambiarPestana(idTab, btn) {
+            document.querySelectorAll('.seccion-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(idTab).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // --- LÓGICA DE RASTREO INDIVIDUAL ---
+        function buscarEstatus() {
+            idPedidoActual = document.getElementById('inputRastreo').value.trim();
+            if(!idPedidoActual) return alert("Por favor ingresa un ID válido.");
+
+            db.collection("pedidos").doc(idPedidoActual).onSnapshot((doc) => {
+                if(!doc.exists) {
+                    alert("No se encontró ningún pedido con ese ID.");
+                    resetTimeline();
+                    document.getElementById('cancelContainer').style.display = 'none';
+                    return;
+                }
+
+                const pedido = doc.data();
+                productosDelPedido = pedido.productos || [];
+                
+                // 🧠 AUTOMATIZACIÓN: Extraemos el teléfono del pedido y cargamos su inventario de fondo
+                if(pedido.telefono) {
+                    telefonoClienteDetectado = pedido.telefono;
+                    document.getElementById('inputTelefonoCliente').value = telefonoClienteDetectado;
+                    document.getElementById('buscadorManualInventario').style.display = 'none'; // Ocultamos el buscador feo porque ya lo sabemos
+                    silenciosoCargarInventario(telefonoClienteDetectado);
+                }
+                
+                if(!document.getElementById('trackingContent')) return;
+
+                document.getElementById('timelineVisual').style.display = 'block';
+                const infoDiv = document.getElementById('infoPedido');
+                infoDiv.style.display = 'block';
+                
+                if(pedido.estado === 'Cancelado') {
+                    infoDiv.innerHTML = `<div style="color:var(--danger); font-weight:bold; text-align:center; font-size:16px;">❌ ESTE PEDIDO HA SIDO CANCELADO</div>`;
+                    resetTimeline();
+                    document.getElementById('cancelContainer').style.display = 'none';
+                    return;
+                }
+                
+                infoDiv.innerHTML = `
+                    <strong>📍 Destino:</strong> ${pedido.direccion || 'No especificada'}<br>
+                    <strong>💳 Método de Pago:</strong> ${pedido.metodoPago || 'N/A'}<br>
+                    <strong>💰 Estado Actual:</strong> <span style="text-transform: uppercase; font-weight:bold;">${pedido.estado || 'Pendiente'}</span>
+                `;
+
+                actualizarLineadeTiempo(pedido.estado || 'Pendiente');
+
+                if (pedido.estado === 'Pendiente' || pedido.estado === 'Preparacion') {
+                    document.getElementById('cancelContainer').style.display = 'block';
+                } else {
+                    document.getElementById('cancelContainer').style.display = 'none';
+                }
+            });
+        }
+
+        function actualizarLineadeTiempo(estado) {
+            resetTimeline();
+            const stepPendiente = document.getElementById('step-pendiente');
+            const stepPreparacion = document.getElementById('step-preparacion');
+            const stepEnviado = document.getElementById('step-enviado');
+            const stepCompletado = document.getElementById('step-completado');
+
+            if (estado === 'Pendiente') stepPendiente.classList.add('active', 'current');
+            else if (estado === 'Preparacion') { stepPendiente.classList.add('active'); stepPreparacion.classList.add('active', 'current'); }
+            else if (estado === 'Enviado') { stepPendiente.classList.add('active'); stepPreparacion.classList.add('active'); stepEnviado.classList.add('active', 'current'); }
+            else if (estado === 'Completado') { stepPendiente.classList.add('active'); stepPreparacion.classList.add('active'); stepEnviado.classList.add('active'); stepCompletado.classList.add('active'); }
+        }
+
+        function resetTimeline() { document.querySelectorAll('.step').forEach(s => s.classList.remove('active', 'current')); }
+        function abrirModalCancelacion() { document.getElementById('modalCancelacion').style.display = 'flex'; }
+        function cerrarModalCancelacion() { document.getElementById('modalCancelacion').style.display = 'none'; }
+
+        async function procesarCancelacionReal() {
+            const motivoSelect = document.getElementById('selectMotivo').value;
+            cerrarModalCancelacion();
+            try {
+                await db.collection("pedidos").doc(idPedidoActual).update({ estado: 'Cancelado', motivoCancelacion: motivoSelect });
+                if (Array.isArray(productosDelPedido)) {
+                    for (const prod of productosDelPedido) {
+                        if (prod.id) {
+                            await db.collection("productos").doc(prod.id).update({ stock: firebase.firestore.FieldValue.increment(prod.cantidad || 1), disponible: true });
+                        }
+                    }
+                }
+                document.getElementById('mainContainer').innerHTML = `
+                    <div class="success-cancel-card">
+                        <i class="fas fa-check-circle" style="color: var(--danger);"></i>
+                        <h2>¡Tu compra fue cancelada con éxito!</h2>
+                        <p>El pedido fue dado de baja correctamente y el inventario regresó a la plataforma.</p>
+                        <a href="index.html" class="btn-back-store">Ir a la página principal</a>
+                    </div>`;
+            } catch (e) { alert("Error al procesar la cancelación."); }
+        }
+
+        // ==================== 🧠 HISTORIAL DE INVENTARIO AUTOMATIZADO ====================
+        function cargarInventarioCliente() {
+            const tel = document.getElementById('inputTelefonoCliente').value.trim();
+            if(!tel) return alert("Ingresa un teléfono válido.");
+            silenciosoCargarInventario(tel);
+        }
+
+        async function silenciosoCargarInventario(tel) {
+            const listaContenedor = document.getElementById('inventario-productos-lista');
+            try {
+                const snap = await db.collection("pedidos").where("telefono", "==", tel).get();
+                
+                if(snap.empty) {
+                    listaContenedor.innerHTML = `<p style="color:#888; text-align:center; padding:10px;">No cuentas con equipos entregados asociados a este perfil.</p>`;
+                    return;
+                }
+
+                let htmlTarjetas = "";
+                let productosAgregadosIDs = new Set();
+
+                snap.forEach(doc => {
+                    const pedido = doc.data();
+                    const fechaOrden = pedido.fecha ? (pedido.fecha.toDate ? pedido.fecha.toDate().toLocaleDateString() : new Date(pedido.fecha).toLocaleDateString()) : 'N/A';
+                    
+                    if(pedido.estado === "Completado" && Array.isArray(pedido.productos)) {
+                        pedido.productos.forEach(prod => {
+                            if(!productosAgregadosIDs.has(prod.id)) {
+                                productosAgregadosIDs.add(prod.id);
+                                
+                                htmlTarjetas += `
+                                    <div class="producto-comprado-card">
+                                        <div class="prod-info-meta">
+                                            <span style="color:#28a745;"><i class="fas fa-shield-alt"></i> Equipo en tu Inventario</span>
+                                            <span style="color:#777;">Adquirido: ${fechaOrden}</span>
+                                        </div>
+                                        <div style="font-weight:bold; font-size:16px; color:var(--dark);">${prod.nombre}</div>
+                                        <div style="font-size:13px; color:#555;">Categoría: <b>${prod.categoria || 'Venta / Renta'}</b></div>
+                                        <button class="btn-calificar" onclick="abrirModalCalificar('${prod.id}', '${prod.nombre.replace(/'/g, "\\'")}', '${tel}')">
+                                            <i class="fas fa-star-half-alt"></i> Calificar / Opinar
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                        });
+                    }
+                });
+
+                if(htmlTarjetas === "") {
+                    listaContenedor.innerHTML = `<p style="color:#e67e22; text-align:center; padding:10px; font-size:13px;">Tienes órdenes registradas, pero aparecerán aquí para calificar una vez que su estado cambie a <b>Completado</b>.</p>`;
+                } else {
+                    listaContenedor.innerHTML = htmlTarjetas;
+                }
+
+            } catch (error) {
+                console.error(error);
+                listaContenedor.innerHTML = `<p style="color:red;">Error al cargar inventario.</p>`;
+            }
+        }
+
+        function abrirModalCalificar(idProd, nombreProd, telefono) {
+            productoACalificarInfo = { id: idProd, nombre: nombreProd, telefono: telefono };
+            document.getElementById('calificarTituloProd').innerText = `Calificar: ${nombreProd}`;
+            document.getElementById('textoComentario').value = "";
+            marcarEstrellas(0);
+            document.getElementById('modalCalificar').style.display = 'flex';
+        }
+
+        function cerrarModalCalificar() { document.getElementById('modalCalificar').style.display = 'none'; }
+
+        function marcarEstrellas(numero) {
+            estrellasSeleccionadas = numero;
+            const estrellas = document.querySelectorAll('#estrellasContenedor i');
+            estrellas.forEach((star, index) => {
+                if(index < numero) star.classList.add('selected');
+                else star.classList.remove('selected');
+            });
+        }
+
+        async function enviarCalificacionCorreo() {
+            const comentario = document.getElementById('textoComentario').value.trim();
+            if(estrellasSeleccionadas === 0) return alert("Por favor selecciona una calificación en estrellas.");
+            if(!comentario) return alert("Por favor escribe un breve comentario.");
+
+            const formspreeEndpoint = "https://formspree.io/f/xpqnynze"; 
+
+            const datosFormulario = {
+                _subject: `⭐ NUEVA CALIFICACIÓN DE EQUIPO - MAQUINCO`,
+                Cliente_Telefono: productoACalificarInfo.telefono,
+                Equipo_Calificado: productoACalificarInfo.nombre,
+                ID_Equipo: productoACalificarInfo.id,
+                Estrellas: `${estrellasSeleccionadas} de 5`,
+                Comentarios_Rendimiento: comentario
+            };
+
+            cerrarModalCalificar();
+
+            try {
+                const response = await fetch(formspreeEndpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                    body: JSON.stringify(datosFormulario)
+                });
+
+                if (response.ok) {
+                    document.getElementById('mainContainer').innerHTML = `
+                        <div class="success-cancel-card">
+                            <i class="fas fa-award" style="color: #fbc02d;"></i>
+                            <h2>¡Muchas gracias por tu reseña!</h2>
+                            <p>Tus opiniones y calificación de <b>${estrellasSeleccionadas} estrellas</b> fueron enviadas a <b>maquincoservicio@gmail.com</b> para auditoría.<br>Nos ayuda a mantener el más alto nivel en maquinaria de Chiapas.</p>
+                            <a href="index.html" class="btn-back-store">Volver a la Tienda</a>
+                        </div>
+                    `;
+                } else {
+                    alert("No se pudo enviar el correo, verifica tu configuración.");
+                }
+            } catch(e) {
+                alert("Ocurrió un error al enviar tu calificación.");
+            }
+        }
+    </script>
+</body>
+</html>
