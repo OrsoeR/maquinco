@@ -269,27 +269,33 @@ body { font-family: Arial, sans-serif; margin: 0; background: white; color: var(
 .btn-cancelar:hover { background: #e5e5e5; }
 
 /* ==================================================================
-   📱 SECCIÓN DISPOSITIVOS MÓVILES (Agregado sin dañar lo anterior)
+   📱 SECCIÓN DISPOSITIVOS MÓVILES (OPTIMIZADO PARA PANTALLAS CHICAS)
    ================================================================== */
 @media screen and (max-width: 820px) {
     /* Ajustes generales de cabecera */
     .container-header {
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
         padding: 10px 15px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .main-header {
         padding: 10px 0;
+        width: 100%;
+        overflow: hidden;
     }
 
     .top-bar {
         text-align: center;
+        width: 100%;
     }
     
     .top-bar .container-header {
         flex-direction: row;
         justify-content: center;
+        gap: 15px;
     }
 
     .top-links {
@@ -300,88 +306,111 @@ body { font-family: Arial, sans-serif; margin: 0; background: white; color: var(
         text-align: center;
         min-width: 100%;
         font-size: 24px;
+        padding: 5px 0;
     }
 
     /* Buscador adaptado a bloque completo */
     .search-box {
         width: 100%;
         flex: none;
+        box-sizing: border-box;
     }
     
     .search-box select {
         padding: 0 5px;
         font-size: 12px;
+        max-width: 110px; /* Evita que el selector de categorías desplace el input */
     }
 
-    /* Ajustes para las acciones (Usuario y Carrito) */
+    /* Solución al desborde de Inicia Sesión y Carrito */
     .header-actions {
         min-width: 100%;
-        justify-content: space-around;
+        width: 100%;
+        justify-content: space-around; /* Distribución simétrica en móvil */
         gap: 10px;
         border-top: 1px dashed var(--border);
-        padding-top: 10px;
+        padding-top: 12px;
+        box-sizing: border-box;
+    }
+
+    .action-item {
+        justify-content: center;
+        flex: 1;
+        white-space: nowrap;
     }
 
     .action-item strong, 
     .action-item span {
-        max-width: 100px;
+        max-width: 90px; /* Previene textos que rompan la línea */
         font-size: 13px;
     }
 
-    /* Menú de navegación en móviles con scroll horizontal para que no se amontone */
+    /* Menú de navegación táctil con scroll fluido horizontal */
+    .nav-menu {
+        width: 100%;
+    }
     .nav-menu ul {
         justify-content: flex-start;
         overflow-x: auto;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
         padding: 0 10px;
+        gap: 5px;
     }
 
     .nav-menu a {
-        padding: 12px 15px;
-        font-size: 14px;
+        padding: 12px 12px;
+        font-size: 13px; /* Tamaño optimizado para evitar colisiones */
     }
 
     /* Contenido principal */
     .main-content {
-        padding: 30px 0;
+        padding: 20px 0;
     }
 
-    /* Ajuste de cuadrícula de productos a 1 o 2 columnas según pantalla pequeña */
+    /* Cuadrícula adaptada a dos columnas estables en móvil */
     .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-        gap: 15px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
         padding: 0 12px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
-    /* Rediseño de tarjeta de producto compacto para celular */
+    /* Rediseño de tarjeta de producto flexible */
     .card {
-        padding: 12px;
-        height: 350px;
+        padding: 10px;
+        height: auto;
+        min-height: 310px;
         border-radius: 8px;
+        box-sizing: border-box;
     }
 
     .card img {
-        height: 110px;
+        height: 100px;
+        object-fit: contain;
     }
 
     .card h3 {
-        font-size: 13px;
-        height: 34px;
-        margin: 5px 0;
+        font-size: 12px;
+        line-height: 1.3;
+        height: 32px;
+        margin: 6px 0;
     }
 
     .price {
-        font-size: 16px;
+        font-size: 15px;
         margin: 5px 0;
     }
 
     .card button {
-        padding: 10px 10px;
-        font-size: 13px;
+        padding: 8px 5px;
+        font-size: 12px;
+        border-radius: 4px;
+        text-transform: uppercase;
     }
 
-    /* Ajustes de Modales para que no se desborden de la pantalla */
+    /* Modales adaptativos */
     .modal-content {
         width: 85%;
         padding: 25px 20px;
@@ -393,9 +422,9 @@ body { font-family: Arial, sans-serif; margin: 0; background: white; color: var(
         box-sizing: border-box;
     }
 
-    /* Ajuste del Carrito Sidebar para celular */
+    /* Carrito lateral a pantalla completa en móvil */
     .cart-sidebar {
-        width: 100%; /* Toma pantalla completa para mejor usabilidad táctil */
+        width: 100%;
         right: -100%;
     }
     
